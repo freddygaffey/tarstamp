@@ -2,18 +2,46 @@
 # https://github.com/freddygaffey/tarstamp
 
 function tarstamp {
+    [CmdletBinding()]
     param(
-        [Parameter(Mandatory=$true, Position=0)]
-        [string]$Path
+        [Alias('n')]
+        [string]$Name,
+        [Alias('h','?')]
+        [switch]$Help,
+        [Parameter(Position=0, ValueFromRemainingArguments=$true)]
+        [string[]]$Path
     )
-    if (-not (Test-Path -LiteralPath $Path)) {
-        Write-Error "tarstamp: '$Path' does not exist"
+    $usage = @"
+usage: tarstamp [-Name NAME] <path> [<path> ...]
+       tarstamp -Help
+
+  -n, -Name NAME   archive name (required when passing multiple paths or a glob)
+  -h, -Help        show this help
+
+examples:
+  tarstamp src\                          # -> src_<timestamp>.tar
+  tarstamp -n pyfiles *.py               # -> pyfiles_<timestamp>.tar
+  tarstamp -Name configs `$HOME\.gitconfig `$HOME\.vimrc
+"@
+    if ($Help) { Write-Host $usage; return }
+    if (-not $Path -or $Path.Count -eq 0) { Write-Host $usage; return }
+    # Expand wildcards (PowerShell does not auto-glob like POSIX shells).
+    $resolved = @()
+    foreach ($p in $Path) {
+        $items = Get-Item -Path $p -ErrorAction SilentlyContinue
+        if (-not $items) { Write-Error "tarstamp: '$p' does not exist"; return }
+        foreach ($i in $items) { $resolved += $i.FullName }
+    }
+    if ($resolved.Count -gt 1 -and -not $Name) {
+        Write-Error "tarstamp: multiple paths require -Name (or -n) NAME"
         return
     }
-    $name = (Get-Item -LiteralPath $Path).Name
+    if (-not $Name) {
+        $Name = (Get-Item -LiteralPath $resolved[0]).Name
+    }
     $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
-    $archive = "${name}_${stamp}.tar"
-    $elapsed = Measure-Command { tar cf $archive $Path }
+    $archive = "${Name}_${stamp}.tar"
+    $elapsed = Measure-Command { tar cf $archive @resolved }
     if ($LASTEXITCODE -ne 0) { Write-Error "tarstamp: tar failed"; return }
     $bytes = (Get-Item -LiteralPath $archive).Length
     $size = switch ($bytes) {

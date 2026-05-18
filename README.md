@@ -44,24 +44,34 @@ Download `tarstamp.sh` (Unix) or `tarstamp.ps1` (Windows) and source it from you
 ## Usage
 
 ```sh
-tarstamp <path>             # archive a file or directory
-untarstamp <archive.tar>    # extract into <archive>.extracted/
+tarstamp <path>                          # single file or directory
+tarstamp -n <name> <path> [<path> ...]   # multiple paths / globs, named archive
+tarstamp -h                              # show help (also shown when run with no args)
+untarstamp <archive.tar>                 # extract into <archive>.extracted/
 ```
 
-Single argument only. Output lands in the current directory, named `<path>_<YYYYMMDD_HHMMSS>.tar`. Tab-completion works on bash and zsh.
+Output lands in the current directory, named `<name>_<YYYYMMDD_HHMMSS>.tar`. With a single path the name defaults to the path's basename. With multiple paths (or a glob), `-n`/`--name` is required so the archive has a predictable name. Tab-completion works on bash and zsh.
 
 ```sh
 $ tarstamp src/
 → src_20260518_143215.tar | 0.4s | 12M
 
+$ tarstamp -n scripts *.py
+→ scripts_20260518_143220.tar | 0.1s | 84K
+
+$ tarstamp --name configs ~/.zshrc ~/.vimrc ~/.gitconfig
+→ configs_20260518_143301.tar | 0.1s | 12K
+
 $ untarstamp src_20260518_143215.tar
 → ./src_20260518_143215.extracted
 ```
 
+On PowerShell, use `-Name` (or `-n`): `tarstamp -n scripts *.py`.
+
 ## Design choices
 
 - **No compression.** Most snapshots are short-lived. Saving 10 seconds of wall time matters more than saving 30% of disk. If you need compression, pipe through `gzip` yourself.
-- **One argument.** Predictable naming. Globs (`tarstamp *.py`) fail loudly rather than producing a confusingly-named archive.
+- **Explicit name for multi-path.** A bare `tarstamp *.py` would produce an archive named after whichever file the shell expanded first — confusing. Requiring `-n` keeps naming predictable.
 - **Current directory output.** The archive lands next to what you snapshotted. Easy to spot, easy to delete.
 - **Timestamp in the filename.** Sortable, readable, unique per second.
 
