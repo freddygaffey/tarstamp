@@ -27,7 +27,7 @@ for rc in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.bash_profile"; do
         continue
     fi
     if [ -t 0 ] || [ -e /dev/tty ]; then
-        printf "tarstamp: append source line to %s? [y/N] " "$rc"
+        printf "tarstamp: append the following line to %s?\n  %s\n[y/N] " "$rc" "$LINE"
         read ans < /dev/tty 2>/dev/null || ans=""
     else
         ans=""
