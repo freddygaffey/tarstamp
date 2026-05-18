@@ -19,17 +19,38 @@ fi
 chmod +r "$DEST"
 
 added=0
+skipped=0
 for rc in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.bash_profile"; do
     [ -f "$rc" ] || continue
-    if ! grep -qF ".tarstamp.sh" "$rc"; then
-        printf '\n# tarstamp\n%s\n' "$LINE" >> "$rc"
-        echo "tarstamp: added source line to $rc"
-        added=1
+    if grep -qF ".tarstamp.sh" "$rc"; then
+        echo "tarstamp: $rc already references tarstamp, skipping"
+        continue
     fi
+    if [ -t 0 ] || [ -e /dev/tty ]; then
+        printf "tarstamp: append source line to %s? [y/N] " "$rc"
+        read ans < /dev/tty 2>/dev/null || ans=""
+    else
+        ans=""
+    fi
+    case "$ans" in
+        [yY]|[yY][eE][sS])
+            printf '\n# tarstamp\n%s\n' "$LINE" >> "$rc"
+            echo "tarstamp: added source line to $rc"
+            added=1
+            ;;
+        *)
+            echo "tarstamp: skipped $rc"
+            skipped=1
+            ;;
+    esac
 done
 
-if [ $added -eq 0 ]; then
+if [ $added -eq 0 ] && [ $skipped -eq 0 ]; then
     echo "tarstamp: no rc file modified (already installed or none found)"
+fi
+if [ $skipped -eq 1 ]; then
+    echo "tarstamp: to load manually, add to your shell rc:"
+    echo "          $LINE"
 fi
 
 echo "tarstamp: done. restart shell or run:  . $DEST"
