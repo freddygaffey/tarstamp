@@ -24,18 +24,18 @@ It is intentionally not a backup tool. No deduplication, no encryption, no sched
 ### Linux / macOS / WSL / Git Bash
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/freddygaffey/tarstamp/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/freddygaffey/tarstamp/main/install.sh | sh && . ~/.tarstamp.sh
 ```
 
-Adds a source line to `~/.bashrc`, `~/.zshrc`, and `~/.bash_profile` (whichever exist). Restart your shell or `source` it.
+Adds a source line to `~/.bashrc`, `~/.zshrc`, and `~/.bash_profile` (whichever exist), then loads `tarstamp` into the current shell. New shells pick it up automatically.
 
 ### Windows (PowerShell / pwsh)
 
 ```powershell
-irm https://raw.githubusercontent.com/freddygaffey/tarstamp/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/freddygaffey/tarstamp/main/install.ps1 | iex; . "$HOME\.tarstamp.ps1"
 ```
 
-Adds a source line to your PowerShell `$PROFILE`. Requires `tar` on PATH (ships with Windows 10 1803+; otherwise install Git for Windows).
+Adds a source line to your PowerShell `$PROFILE`, then loads `tarstamp` into the current session. Requires `tar` on PATH (ships with Windows 10 1803+; otherwise install Git for Windows).
 
 ### Manual
 
